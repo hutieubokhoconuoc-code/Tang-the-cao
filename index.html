@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem Quảng Cáo Đổi Quà</title>
+    <style>
+        :root { --bg: #121212; --card: #1e1e1e; --text: #eee; --accent: #00cc66; --sub-accent: #ff385c; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-user-select: none; user-select: none; }
+        
+        header { background: #000; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--accent); position: sticky; top:0; z-index: 100; }
+        header h1 { font-size: 20px; color: var(--accent); cursor: pointer; }
+        .user-info { font-weight: bold; color: #ffcc00; background: #222; padding: 5px 10px; border-radius: 20px; border: 1px solid #444; text-align: right; font-size: 13px;}
+        
+        .container { padding: 15px; max-width: 800px; margin: auto; }
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tab-btn { flex: 1; padding: 10px; background: #333; color: #fff; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 14px;}
+        .tab-btn.active { background: var(--accent); }
+
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        @media(min-width: 600px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        /* Style ô chọn Hãng thẻ */
+        .brand-card { background: var(--card); padding: 20px; border-radius: 8px; text-align: center; border: 1px solid #333; cursor: pointer; transition: 0.3s; font-weight: bold; font-size: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90px;}
+        .brand-card:hover { border-color: var(--accent); background: #252525; transform: translateY(-2px); }
+        .brand-card span { color: #aaa; font-size: 11px; font-weight: normal; margin-top: 5px; display: block;}
+
+        .card { background: var(--card); padding: 15px; border-radius: 8px; position: relative; border: 1px solid #333; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; gap: 10px;}
+        .point-tag { background: rgba(0, 204, 102, 0.15); color: var(--accent); padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 13px; white-space: nowrap;}
+
+        .btn-delete { background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-left: 10px; }
+        
+        #tasks, #shop, #admin { display: none; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        input, textarea, select { width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #444; background: #333; color: #fff; font-size: 16px; -webkit-user-select: text; user-select: text; }
+        .btn { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; width: 100%; cursor: pointer; }
+        .btn-claim { background: var(--sub-accent); padding: 8px 12px; font-size: 13px; border-radius: 4px; font-weight: bold; color: white; border: none; cursor: pointer; white-space: nowrap;}
+        .btn-claim:disabled { background: #444; color: #888; cursor: not-allowed; }
+        .btn-admin-toggle { background: #444; width: auto; padding: 8px 15px; margin-bottom: 15px;}
+
+        .blur-mode { filter: blur(20px); }
+        .limit-box { background: #222; border: 1px dashed #555; padding: 12px; border-radius: 6px; margin-bottom: 15px; text-align: center; color: #ffcc00; font-size: 15px; font-weight: 500;}
+        
+        .shop-section-title { font-size: 15px; color: var(--accent); margin: 15px 0 5px 0; border-left: 3px solid var(--accent); padding-left: 8px; grid-column: 1 / -1; text-transform: uppercase; font-weight: bold;}
+
+        /* CSS CHO CỬA SỔ CHỌN MỆNH GIÁ (MODAL POPUP) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px;}
+        .modal-content { background: #1e1e1e; border: 1px solid #444; border-radius: 12px; max-width: 450px; width: 100%; padding: 20px; animation: scaleUp 0.2s; }
+        @keyframes scaleUp { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 10px;}
+        .modal-header h2 { font-size: 18px; color: #fff; }
+        .close-modal { font-size: 24px; color: #aaa; cursor: pointer; background: none; border: none; }
+        
+        .value-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px;}
+        .value-item { background: #282828; border: 1px solid #444; padding: 12px 15px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s;}
+        .value-item:hover { border-color: var(--accent); background: #333;}
+        .value-title { font-weight: bold; color: #fff; font-size: 15px;}
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 onclick="unlockAdmin()">🎁 KIẾM THÊ CÀO 24H 🎁</h1>
+    <div class="user-info">
+        <div>Ví: <span id="userPoints">0</span> P</div>
+        <div style="font-size: 11px; color: #aaa;">Hôm nay: <span id="todayViews">0</span>/<span id="maxLimit">10</span> lượt</div>
+    </div>
+</header>
+
+<div class="container">
+    <!-- MENU CHUYỂN TAB -->
+    <div class="nav-tabs">
+        <button id="btn-tab-tasks" class="tab-btn active" onclick="switchTab('tasks')">Nhiệm vụ</button>
+        <button id="btn-tab-shop" class="tab-btn" onclick="switchTab('shop')">Đổi quà</button>
+    </div>
+
+    <button id="adminBtn" class="btn btn-admin-toggle" style="display:none;" onclick="showAdmin()">+ Thêm nội dung (Admin)</button>
+
+    <!-- TAB 1: DANH SÁCH NHIỆM VỤ / QUẢNG CÁO -->
+    <div id="tasks" style="display: block;">
+        <div class="limit-box">
+            📌 Hãy tích đủ điểm để đổi quà nhé!
+        </div>
+        <h2 style="margin-bottom: 15px; font-size: 18px;">Quảng cáo khả dụng</h2>
+        <div id="taskList" class="grid" style="grid-template-columns: 1fr;">Đang tải nhiệm vụ...</div>
+    </div>
+
+    <!-- TAB 2: CỬA HÀNG ĐỔI QUÀ (CHỌN HÃNG THẺ) -->
+    <div id="shop">
+        <div class="grid">
+            
+            <div class="shop-section-title">📱 Thẻ điện thoại</div>
+            <div class="brand-card" onclick="openValues('Viettel')">Viettel <span>Bấm để chọn mốc</span></div>
+            <div class="brand-card" onclick="openValues('VinaPhone')">VinaPhone <span>Bấm để chọn mốc</span></div>
+            <div class="brand-card" onclick="openValues('MobiFone')">MobiFone <span>Bấm để chọn mốc</span></div>
+
+            <div class="shop-section-title">🎮 Thẻ Game</div>
+            <div class="brand-card" onclick="openValues('Garena')">Garena <span>Liên Quân, FF...</span></div>
+            <div class="brand-card" onclick="openValues('Zing (VNG)')">Zing (VNG) <span>Võ Lâm, PUBG...</span></div>
+            <div class="brand-card" onclick="openValues('Vcoin')">Vcoin <span>Đột Kích, Audition...</span></div>
+            <div class="brand-card" onclick="openValues('Gate')">Gate <span>FPT, TLBB...</span></div>
+            <div class="brand-card" onclick="openValues('Funcard')">Funcard <span>Funtap Game</span></div>
+            <div class="brand-card" onclick="openValues('SohaCoin')">SohaCoin <span>SohaGame</span></div>
+            <div class="brand-card" onclick="openValues('Appota')">Appota <span>Gamota Game</span></div>
+
+        </div>
+    </div>
+
+    <!-- TAB 3: QUẢN TRỊ (CHỈ ADMIN THẤY) -->
+    <div id="admin">
+        <button class="btn btn-admin-toggle" onclick="switchTab('tasks')">← Quay lại</button>
+        <h2>Cấu hình & Thêm nhiệm vụ</h2>
+        <div style="background: #222; padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+            <label style="font-size: 14px; color: #aaa;">Giới hạn số QC thành viên được xem/ngày:</label>
+            <input type="number" id="a-max-limit" value="10" onchange="changeMaxLimit(this.value)">
+        </div>
+        
+        <h2>Thêm link QC mới</h2>
+        <input type="text" id="a-title" placeholder="Tiêu đề (Nên đặt: QC hàng ngày số 1, số 2...)">
+        <input type="number" id="a-points" placeholder="Số điểm thưởng (VD: 143)">
+        <input type="text" id="a-link" placeholder="Link quảng cáo rút gọn">
+        <button class="btn" onclick="saveTask()">PHÁT HÀNH NHIỆM VỤ</button>
+    </div>
+</div>
+
+<!-- POPUP CHỌN MỆNH GIÁ -->
+<div id="valueModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalBrandTitle">Tên Thẻ</h2>
+            <button class="close-modal" onclick="closeValues()">&times;</button>
+        </div>
+        <p style="font-size: 13px; color: #888; margin-bottom: 10px;">Chọn mệnh giá muốn đổi:</p>
+        <div id="modalValueList" class="value-grid">
+            <!-- JavaScript tự động chèn các mốc 10k, 20k, 50k vào đây -->
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCHpgEfiBo5tJozMI68TjEH_iNtFA1wgqk",
+        authDomain: "apptruyen-40b76.firebaseapp.com",
+        projectId: "apptruyen-40b76",
+        storageBucket: "apptruyen-40b76.firebasestorage.app",
+        messagingSenderId: "495770222258",
+        appId: "1:495770222258:web:5b020ee6dbdd39971f13ab",
+        measurementId: "G-9HNJG2HZ7Y"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    let userPoints = parseInt(localStorage.getItem('user_points')) || 0;
+    document.getElementById('userPoints').innerText = userPoints.toLocaleString();
+
+    let MAX_VIEWS_PER_DAY = parseInt(localStorage.getItem('max_views_limit')) || 10;
+    document.getElementById('maxLimit').innerText = MAX_VIEWS_PER_DAY;
+    document.getElementById('a-max-limit').value = MAX_VIEWS_PER_DAY;
+
+    function getTodayString() {
+        const d = new Date();
+        return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    }
+
+    let todayStr = getTodayString();
+    let lastViewDate = localStorage.getItem('last_view_date') || "";
+    let todayViewsCount = parseInt(localStorage.getItem('today_views_count')) || 0;
+
+    if (lastViewDate !== todayStr) {
+        todayViewsCount = 0;
+        localStorage.setItem('today_views_count', 0);
+        localStorage.setItem('last_view_date', todayStr);
+    }
+    document.getElementById('todayViews').innerText = todayViewsCount;
+
+    let isAdminMode = false;
+
+    window.unlockAdmin = function() {
+        const pass = prompt("Nhập mã bảo mật Admin:");
+        if (pass === "1713873") {
+            isAdminMode = true;
+            document.getElementById('adminBtn').style.display = 'block';
+            alert("Chào Admin! Đã mở cấu hình.");
+            renderTasks();
+        }
+    };
+
+    window.changeMaxLimit = function(val) {
+        if(!val || val < 1) return;
+        localStorage.setItem('max_views_limit', val);
+        MAX_VIEWS_PER_DAY = parseInt(val);
+        document.getElementById('maxLimit').innerText = val;
+        renderTasks();
+    };
+
+    window.switchTab = (tab) => {
+        document.getElementById('tasks').style.display = tab === 'tasks' ? 'block' : 'none';
+        document.getElementById('shop').style.display = tab === 'shop' ? 'block' : 'none';
+        document.getElementById('admin').style.display = tab === 'admin' ? 'block' : 'none';
+        document.getElementById('btn-tab-tasks').classList.toggle('active', tab === 'tasks');
+        document.getElementById('btn-tab-shop').classList.toggle('active', tab === 'shop');
+    };
+
+    window.showAdmin = () => switchTab('admin');
+
+    // LOGIC HIỂN THỊ MỐC MỆNH GIÁ KHI BẤM VÀO HÃNG THẺ
+    window.openValues = function(brandName) {
+        document.getElementById('modalBrandTitle').innerText = "Thẻ " + brandName;
+        const valueListDiv = document.getElementById('modalValueList');
+        
+        // Định nghĩa các mốc mệnh giá và số điểm tương ứng
+        const cardRates = [
+            { name: "10.000đ", points: 10000 },
+            { name: "20.000đ", points: 20000 },
+            { name: "50.000đ", points: 50000 },
+            { name: "100.000đ", points: 100000 }
+        ];
+
+        valueListDiv.innerHTML = "";
+        
+        cardRates.forEach(rate => {
+            const item = document.createElement('div');
+            item.className = 'value-item';
+            item.innerHTML = `
+                <div class="value-title">Mệnh giá ${rate.name}</div>
+                <div class="point-tag">${rate.points.toLocaleString()} P</div>
+            `;
+            item.onclick = () => {
+                closeValues();
+                redeemGift(`${brandName} ${rate.name}`, rate.points);
+            };
+            valueListDiv.appendChild(item);
+        });
+
+        document.getElementById('valueModal').style.display = "flex";
+    };
+
+    window.closeValues = function() {
+        document.getElementById('valueModal').style.display = "none";
+    };
+
+    // Tải danh sách QC từ Firebase
+    async function renderTasks() {
+        const listDiv = document.getElementById('taskList');
+        try {
+            const q = query(collection(db, "tasks"), orderBy("createdAt", "desc"));
+            const querySnapshot = await getDocs(q);
+            listDiv.innerHTML = "";
+
+            if (querySnapshot.empty) {
+                listDiv.innerHTML = "Hiện chưa có nhiệm vụ nào được phân phối.";
+                return;
+            }
+
+            querySnapshot.forEach((documentSnap) => {
+                const data = documentSnap.data();
+                const docId = documentSnap.id;
+
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const info = document.createElement('div');
+                info.innerHTML = `<h3>${data.title}</h3><p>Xem hết link để nhận điểm</p>`;
+                card.appendChild(info);
+
+                const pointTag = document.createElement('div');
+                pointTag.className = 'point-tag';
+                pointTag.innerText = `+${data.points} P`;
+                card.appendChild(pointTag);
+
+                const claimBtn = document.createElement('button');
+                claimBtn.className = 'btn-claim';
+                claimBtn.style.marginLeft = "10px";
+                claimBtn.innerText = "Xem";
+
+                if (todayViewsCount >= MAX_VIEWS_PER_DAY) {
+                    claimBtn.disabled = true;
+                    claimBtn.innerText = "Hết lượt";
+                }
+
+                claimBtn.onclick = () => {
+                    if (todayViewsCount >= MAX_VIEWS_PER_DAY) {
+                        alert("Hôm nay bạn đã xem hết số lượt quảng cáo cho phép! Vui lòng quay lại vào ngày mai.");
+                        return;
+                    }
+
+                    window.open(data.link, '_blank');
+                    
+                    todayViewsCount++;
+                    localStorage.setItem('today_views_count', todayViewsCount);
+                    document.getElementById('todayViews').innerText = todayViewsCount;
+
+                    userPoints += parseInt(data.points);
+                    localStorage.setItem('user_points', userPoints);
+                    document.getElementById('userPoints').innerText = userPoints.toLocaleString();
+                    
+                    alert(`Thành công! Điểm cộng thêm: ${data.points}.`);
+                    
+                    if(todayViewsCount >= MAX_VIEWS_PER_DAY) {
+                        renderTasks();
+                    }
+                };
+                card.appendChild(claimBtn);
+
+                if (isAdminMode) {
+                    const delBtn = document.createElement('button');
+                    delBtn.className = 'btn-delete';
+                    delBtn.innerText = 'Xóa';
+                    delBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        if(confirm("Xóa nhiệm vụ này?")) deleteTask(docId);
+                    };
+                    card.appendChild(delBtn);
+                }
+                listDiv.appendChild(card);
+            });
+        } catch (e) {
+            listDiv.innerHTML = "Lỗi kết nối dữ liệu quảng cáo.";
+        }
+    }
+
+    // Admin lưu QC
+    window.saveTask = async function() {
+        const title = document.getElementById('a-title').value;
+        const points = document.getElementById('a-points').value;
+        const link = document.getElementById('a-link').value;
+
+        if(!title || !points || !link) return alert("Điền đủ thông tin!");
+
+        try {
+            await addDoc(collection(db, "tasks"), {
+                title, points: parseInt(points), link, createdAt: new Date()
+            });
+            alert("Đã đăng nhiệm vụ thành công!");
+            document.getElementById('a-title').value = '';
+            document.getElementById('a-points').value = '';
+            document.getElementById('a-link').value = '';
+            switchTab('tasks');
+            renderTasks();
+        } catch (e) { alert("Lỗi: " + e.message); }
+    }
+
+    async function deleteTask(id) {
+        await deleteDoc(doc(db, "tasks", id));
+        renderTasks();
+    }
+
+    // Hàm xử lý khi chọn mốc đổi quà
+    window.redeemGift = async function(giftName, cost) {
+        if (userPoints < cost) {
+            alert(`Bạn cần tối thiểu ${cost.toLocaleString()} điểm để đổi phần quà này!`);
+            return;
+        }
+        
+        const userContact = prompt(`Để nhận mã [${giftName}], hãy điền Số điện thoại hoặc link Facebook/Zalo liên hệ của bạn:`);
+        if (!userContact) return alert("Bạn bắt buộc phải nhập thông tin nhận quà!");
+
+        const confirmExchange = confirm(`Xác nhận dùng ${cost.toLocaleString()} điểm để đổi lấy ${giftName}?`);
+        if (confirmExchange) {
+            try {
+                await addDoc(collection(db, "history_orders"), {
+                    contact: userContact,
+                    gift: giftName,
+                    pointsUsed: cost,
+                    status: "Đang chờ duyệt",
+                    createdAt: new Date()
+                });
+
+                userPoints -= cost;
+                localStorage.setItem('user_points', userPoints);
+                document.getElementById('userPoints').innerText = userPoints.toLocaleString();
+                
+                alert(`Đăng ký đổi quà thành công! Yêu cầu đổi [${giftName}] đã gửi tới hệ thống xử lý của Admin.`);
+            } catch (e) {
+                alert("Lỗi kết nối Firebase: " + e.message);
+            }
+        }
+    };
+
+    renderTasks();
+</script>
+</body>
+</html>
